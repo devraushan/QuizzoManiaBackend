@@ -7,7 +7,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { route } = require("express/lib/router");
 const { findOne } = require("../Models/User");
-
+const fetchuser = require("../middleware/fetchuser");
 
 const Signature = "Ross";
 
@@ -17,6 +17,8 @@ router.use((req, res, next) => {
   next();
 });
 
+
+//Route 1: for signup 
 router.post(
   "/signup",
   //validation for entered data
@@ -42,21 +44,21 @@ router.post(
           res.status(400).json({ error: "userName is already taken" });
         } else {
           const salt = await bcrypt.genSalt(10);
-          const hashPass = await bcrypt.hash(req.body.password,salt);
+          const hashPass = await bcrypt.hash(req.body.password, salt);
 
           user = await User.create({
             displayName: req.body.displayName,
             userName: req.body.userName,
             email: req.body.email,
-            password: hashPass
+            password: hashPass,
           });
           const usrData = {
-            user:{
-              id: user.id
-            }
+            user: {
+              id: user.id,
+            },
           };
-          authToken = await jwt.sign(usrData,Signature);
-          res.send({authToken});
+          authToken = await jwt.sign(usrData, Signature);
+          res.send({ authToken });
         }
       }
     } catch (error) {
@@ -65,36 +67,60 @@ router.post(
   }
 );
 
-router.get("/about", (req, res) => {
-  res.send("About birds");
-});
+//Route 2: for login
+router.post(
+  "/login",
+  [
+    //login validation
+    body("email", "please enter a valid email").isEmail(),
+    body("password", "password should not be void").isLength({min: 1}),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    try {
+      if (!errors.isEmpty()) {
+        res.status(400).json({ error: errors.array() });
+      } else {
+        const { email, password } = req.body;
 
-
-route.post("/login",[],async (req,res)=>{
-  try {
-    const {email,password} = req.body;
-
-    let user = await findOne({email});
-    if(!user){
-      res.status(400).json({error: "bad credentials"});
-    }
-
-    const passCheck = await bcrypt.compare(password,user.password);
-    if(!passCheck){
-      res.status(400).json({error: "bad credentials"});
-    }
-    else{
-      const usrData = {
-        user:{
-          id: user.id
+        let user = await User.findOne({ email });
+        if (!user) {
+          res.status(400).json({ error: "bad credentials" });
+        } else {
+          const passCheck = await bcrypt.compare(password, user.password);
+          if (!passCheck) {
+            res.status(400).json({ error: "bad credentials" });
+          } else {
+            const usrData = {
+              user: {
+                id: user.id,
+              },
+            };
+            authToken = await jwt.sign(usrData, Signature);
+            res.send({ authToken });
+          }
         }
-      };
-      authToken = await jwt.sign(usrData,Signature);
-      res.send({authToken});
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send("Internal Server Error");
     }
-  } catch (error) {
+  }
+);
+
+//Route 3 : Fetch User data 
+router.post("/fetchuser",fetchuser,async (req,res)=>{
+  try {
+    let userId = req.body.user.id;
     
+    const user = await User.findById(userId).select("-password");
+    res.send(user);
+
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("internal server error");
   }
 })
 
 module.exports = router;
+ 

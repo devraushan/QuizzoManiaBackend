@@ -1,18 +1,21 @@
-import mongoose, { mongo } from "mongoose";
+const mongoose = require("mongoose");
+const { mongo } = require("mongoose");
 const { Schema } = mongoose;
 
 const quizSchema = new Schema({
-  quizId: { type: String, required: true, unique: true },
-  joiningKey: { type: String, required: true },
+  quizName: { type: String, required: true },
+  joiningKey: { type: String, required: true, unique: true },
   assignedUsers: [{ userId: { type: String } }],
   blockList: [{ userId: { type: String } }],
   noOfRounds: { type: Number, required: true },
   roundDetails: [
     {
+      roundName: { type: String },
       noOfQuestion: { type: Number },
       modeOfQuiz: { type: String },
       questionList: [
         {
+          
           questionId: { type: String },
           marksAssigned: {
             onTrue: { type: Number },
