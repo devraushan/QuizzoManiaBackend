@@ -2,15 +2,15 @@ const express = require('express')
 const user = require("./endPoints/user")
 
 const app = express()
-const port = 3000
+const port = 5000
 
 app.use(express.json())
 
 app.get('/', (req, res) => {
   res.send("DOne")
 })
-app.use('/users',user)
-
+app.use('/auth/users',user);
+  
 
 
 
