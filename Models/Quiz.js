@@ -8,6 +8,7 @@ const quizSchema = new Schema({
   assignedUsers: [{ userId: { type: String } }],
   blockList: [{ userId: { type: String } }],
   noOfRounds: { type: Number, required: true },
+  isActive: { type: Boolean },
   roundDetails: [
     {
       roundName: { type: String },
@@ -15,7 +16,6 @@ const quizSchema = new Schema({
       modeOfQuiz: { type: String },
       questionList: [
         {
-          
           questionId: { type: String },
           marksAssigned: {
             onTrue: { type: Number },
